@@ -27,5 +27,40 @@ def load_data(filename):
                         row[field] = float(row[field])
             
             data.append(row)
-            
+
     return data
+
+
+def average(values):
+    if values:
+        return sum(values) / len(values)
+    else:
+        None
+
+
+def calc_avg_flipper_by_species_sex(data):
+    # group flipper lengths by (species, sex)
+    flipper_groups = {}
+
+    for row in data:
+        species = row.get("species")
+        sex = row.get("sex")
+        length = row.get("flipper_length_mm")
+
+        # if any value is missing
+        if not species or not sex or length is None:
+            continue
+
+        key = (species, sex)
+        if key not in flipper_groups:
+            flipper_groups[key] = []
+        flipper_groups[key].append(length)
+
+    # the average for each group
+    averages = {}
+    for key, lengths in flipper_groups.items():
+        avg = sum(lengths) / len(lengths)
+        averages[key] = avg
+
+    return averages
+
