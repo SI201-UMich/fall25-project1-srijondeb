@@ -34,8 +34,8 @@ def load_data(filename):
 def average(values):
     if values:
         return sum(values) / len(values)
-    else:
-        None
+    
+    return None
 
 
 def calc_avg_flipper_by_species_sex(data):
@@ -64,3 +64,68 @@ def calc_avg_flipper_by_species_sex(data):
 
     return averages
 
+
+def calc_heaviest_species_by_island(data):
+    # grouping body masses by (island, species)
+    body_mass_groups = {}
+
+    for row in data:
+        island = row.get("island")
+        species = row.get("species")
+        mass = row.get("body_mass_g")
+
+        if not island or not species or mass is None:
+            continue  # skip rows with missing data
+
+        key = (island, species)
+        if key not in body_mass_groups:
+            body_mass_groups[key] = []
+        body_mass_groups[key].append(mass)
+
+    # average mass for each (island, species)
+    avg_masses = {}
+    for key, masses in body_mass_groups.items():
+        avg = sum(masses) / len(masses)
+        avg_masses[key] = avg
+
+    # heaviest species per island
+    heaviest_by_island = {}
+    for (island, species), avg_mass in avg_masses.items():
+        if island not in heaviest_by_island:
+            heaviest_by_island[island] = {"species": species, "avg_mass": avg_mass}
+        else:
+            current_max = heaviest_by_island[island]["avg_mass"]
+            if avg_mass > current_max:
+                heaviest_by_island[island] = {"species": species, "avg_mass": avg_mass}
+
+    return heaviest_by_island
+
+
+def write_results(results, filename, result_type):
+    with open(filename, "w", newline="") as f:
+        writer = csv.writer(f)
+
+        if result_type == "flipper":
+            writer.writerow(["species", "sex", "average_flipper_length"])
+            for (species, sex), avg in results.items():
+                writer.writerow([species, sex, round(avg, 2)])
+
+        elif result_type == "heaviest":
+            writer.writerow(["island", "species", "avg_mass"])
+            for island, value in results.items():
+                writer.writerow([island, value["species"], round(value["avg_mass"], 2)])
+
+
+
+def main():
+    data = load_data("penguins.csv")
+
+    # First calculation: Average flipper length by species and sex
+    flipper_averages = calc_avg_flipper_by_species_sex(data)
+    write_results(flipper_averages, "flipper_averages.csv", "flipper")
+
+    # Second calculation: Heaviest species by island
+    heaviest_species = calc_heaviest_species_by_island(data)
+    write_results(heaviest_species, "heaviest_species.csv", "heaviest")
+
+    print("Both results written successfully.")
