@@ -1,0 +1,16 @@
+Flipper Averages:
+species,sex,average_flipper_length
+Adelie,male,192.41
+Adelie,female,187.79
+Adelie,NA,185.6
+Gentoo,female,212.71
+Gentoo,male,221.54
+Gentoo,NA,215.75
+Chinstrap,female,191.74
+Chinstrap,male,199.91
+
+Heaviest Species by Island:
+island,species,avg_mass
+Torgersen,Adelie,3706.37
+Biscoe,Gentoo,5076.02
+Dream,Chinstrap,3733.09

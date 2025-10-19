@@ -2,7 +2,10 @@
 # Student ID: 80514602
 # Email: srijon@umich.edu
 # Collaborators: None, worked on this project individually
-# GenAI Usage: Used ChatGPT for planning & debugging
+# GenAI Usage: I used ChatGPT to help me write all of my test
+#              cases and to debug and fix errors in my functions. It was 
+#              helpful for planning how to structure my code, catching mistakes, 
+#              and making sure my results matched the project requirements.
 
 import csv
 
@@ -119,13 +122,100 @@ def write_results(results, filename, result_type):
 
 def main():
     data = load_data("penguins.csv")
+    with open("penguin_results.csv", "w", newline="") as f:
+        writer = csv.writer(f)
 
-    # First calculation: Average flipper length by species and sex
-    flipper_averages = calc_avg_flipper_by_species_sex(data)
-    write_results(flipper_averages, "flipper_averages.csv", "flipper")
+        # Flipper averages
+        writer.writerow(["Flipper Averages:"])  # title row
+        writer.writerow(["species", "sex", "average_flipper_length"])
+        flipper_averages = calc_avg_flipper_by_species_sex(data)
+        for (species, sex), avg in flipper_averages.items():
+            writer.writerow([species, sex, round(avg, 2)])
 
-    # Second calculation: Heaviest species by island
-    heaviest_species = calc_heaviest_species_by_island(data)
-    write_results(heaviest_species, "heaviest_species.csv", "heaviest")
+        writer.writerow([])  # blank line 
 
-    print("Both results written successfully.")
+        # Heaviest species
+        writer.writerow(["Heaviest Species by Island:"])  # title row
+        writer.writerow(["island", "species", "avg_mass"])
+        heaviest_species = calc_heaviest_species_by_island(data)
+        for island, value in heaviest_species.items():
+            writer.writerow([island, value["species"], round(value["avg_mass"], 2)])
+
+    print("Results written to penguin_results.csv")
+
+
+
+
+def test_load_data():
+    """Tests for load_data"""
+    # General: normal row with numbers
+    data = [
+        {"bill_length_mm": "39.1", "bill_depth_mm": "18.7", "flipper_length_mm": "181", "body_mass_g": "3750", "year": "2007"}
+    ]
+    # Simulate DictReader row cleanup
+    row = data[0]
+    row["bill_length_mm"] = float(row["bill_length_mm"])
+    assert isinstance(row["bill_length_mm"], float)
+
+    # Edge: row with NA
+    row["flipper_length_mm"] = "NA"
+    flipper_val = None if row["flipper_length_mm"] == "NA" else float(row["flipper_length_mm"])
+    assert flipper_val is None
+
+def test_average():
+    """Tests for average"""
+    # General
+    assert average([1, 2, 3]) == 2
+    assert round(average([2.5, 3.5, 4.5]), 2) == 3.5
+    # Edge
+    assert average([]) is None
+    assert average([10]) == 10
+
+
+def test_calc_avg_flipper_by_species_sex():
+    """Tests for calc_avg_flipper_by_species_sex"""
+    mock_data = [
+        {"species": "Adelie", "sex": "male", "flipper_length_mm": 180},
+        {"species": "Adelie", "sex": "male", "flipper_length_mm": 190},
+        {"species": "Adelie", "sex": "female", "flipper_length_mm": 170},
+    ]
+    # General: normal grouping
+    result = calc_avg_flipper_by_species_sex(mock_data)
+    assert round(result[("Adelie", "male")], 2) == 185.0
+    assert result[("Adelie", "female")] == 170
+
+    # Edge: missing data
+    mock_data.append({"species": "Adelie", "sex": None, "flipper_length_mm": 200})
+    result = calc_avg_flipper_by_species_sex(mock_data)
+    assert ("Adelie", None) not in result
+
+
+def test_calc_heaviest_species_by_island():
+    """Tests for calc_heaviest_species_by_island"""
+    mock_data = [
+        {"island": "Torgersen", "species": "Adelie", "body_mass_g": 3700},
+        {"island": "Torgersen", "species": "Adelie", "body_mass_g": 3800},
+        {"island": "Torgersen", "species": "Gentoo", "body_mass_g": 4500},
+        {"island": "Biscoe", "species": "Gentoo", "body_mass_g": 5000},
+    ]
+    # General: correct heaviest species
+    result = calc_heaviest_species_by_island(mock_data)
+    assert result["Torgersen"]["species"] == "Gentoo"
+    assert result["Biscoe"]["species"] == "Gentoo"
+
+    # Edge: missing mass
+    mock_data.append({"island": "Biscoe", "species": "Gentoo", "body_mass_g": None})
+    result = calc_heaviest_species_by_island(mock_data)
+    # Should still compute without crashing
+    assert "Biscoe" in result
+
+
+if __name__ == "__main__":
+    main()
+
+if __name__ == "__main__":
+    test_load_data()
+    test_average()
+    test_calc_avg_flipper_by_species_sex()
+    test_calc_heaviest_species_by_island()
+    print("All tests passed")
